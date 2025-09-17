@@ -10,6 +10,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
+  "main": "dist-electron/main.js",
   "dependencies": {
     "@react-three/fiber": "^8.18.0",
     "react": "^18.2.0",
