@@ -11,16 +11,18 @@ struct IpcPayload {
     neural: NeuralConfig,
 }
 
-pub fn process_ipc_payload(json_string: &str) {
+pub fn process_ipc_payload(json_string: &str) -> String {
     match serde_json::from_str::<IpcPayload>(json_string) {
         Ok(payload) => {
             let genome = DigitalGenome::new("ipc-gen-001".to_string(), payload.genome);
             let lattice = NeuralLattice::new(payload.neural);
             let metahuman = MetaHuman::new("Subject-IPC".to_string(), genome, lattice);
-            metahuman.print_summary();
+            
+            serde_json::to_string(&metahuman)
+                .unwrap_or_else(|e| format!("{{\"error\":\"Serialization failed: {}\"}}", e))
         }
         Err(e) => {
-            println!("Error deserializing payload: {}", e);
+            format!("{{\"error\":\"Deserialization failed: {}\"}}", e)
         }
     }
 }

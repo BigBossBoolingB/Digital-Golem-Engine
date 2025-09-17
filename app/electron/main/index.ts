@@ -2,7 +2,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'path';
 import { exec } from 'child_process';
 
-function createWindow(): void {
+function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -29,12 +29,14 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
   }
+  
+  return mainWindow;
 }
 
 app.whenReady().then(() => {
-  ipcMain.on('connect-rust', (event, payload) => {
+  ipcMain.on('connect-rust', (_, payload) => {
     console.log('IPC message [connect-rust] received. Executing Rust core with payload:', payload);
-    const command = `cargo run --manifest-path ../core/Cargo.toml -- --data '${payload}'`;
+    const command = `cargo run --manifest-path ../core/Cargo.toml -- '${payload}'`;
     exec(command, (error, stdout, stderr) => {
       if (error) {
         console.error(`Rust Execution Error: ${error.message}`);
@@ -45,11 +47,12 @@ app.whenReady().then(() => {
       }
       if (stdout) {
         console.log(`Rust Stdout: ${stdout}`);
+        mainWindow.webContents.send('metahuman-generated', stdout.trim());
       }
     });
   });
 
-  createWindow();
+  const mainWindow = createWindow();
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

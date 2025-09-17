@@ -27,4 +27,7 @@ contextBridge.exposeInMainWorld('electron', {
 
 contextBridge.exposeInMainWorld('api', {
   send: (channel: string, data?: unknown) => ipcRenderer.send(channel, data),
+  on: (channel: string, listener: (data: any) => void) => {
+    ipcRenderer.on(channel, (_, data) => listener(data));
+  },
 })

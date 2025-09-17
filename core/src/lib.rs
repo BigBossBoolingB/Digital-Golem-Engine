@@ -4,8 +4,9 @@ pub mod neural_weaver;
 
 use genome_sequencer::DigitalGenome;
 use neural_weaver::NeuralLattice;
+use serde::Serialize;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct MetaHuman {
     pub id: String,
     pub genome: DigitalGenome,

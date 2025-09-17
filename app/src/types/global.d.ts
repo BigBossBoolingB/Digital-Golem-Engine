@@ -12,6 +12,7 @@ declare global {
     }
     api?: {
       send: (channel: string, data?: unknown) => void
+      on: (channel: string, listener: (data: any) => void) => void
     }
   }
 }

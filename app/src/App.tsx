@@ -1,4 +1,4 @@
-import React, { useReducer } from 'react';
+import { useReducer } from 'react';
 import { GenomeSequencer } from './components/GenomeSequencer';
 import { NeuralWeaver } from './components/NeuralWeaver';
 import { CrucibleViewer } from './components/CrucibleViewer';
@@ -26,7 +26,7 @@ function App() {
       },
     };
 
-    window.api.send('connect-rust', JSON.stringify(payload));
+    window.api?.send('connect-rust', JSON.stringify(payload));
   };
 
   return (
@@ -47,7 +47,7 @@ function App() {
           <NeuralWeaver dispatch={dispatch} />
         </div>
         <div className="md:col-span-2">
-          <CrucibleViewer appState={state} />
+          <CrucibleViewer />
         </div>
       </main>
     </div>
