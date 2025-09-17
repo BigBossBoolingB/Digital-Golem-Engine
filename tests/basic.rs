@@ -1,5 +1,9 @@
-use digital_golem_engine::genome_sequencer::{GeneBlock, SkeletalMaterial, MusculatureType, DermalLayer, DigitalGenome};
-use digital_golem_engine::neural_weaver::{NeuralConfig, FoundationalModel, MemoryMatrix, NeuralLattice};
+use digital_golem_engine::genome_sequencer::{
+    DermalLayer, DigitalGenome, GeneBlock, MusculatureType, SkeletalMaterial,
+};
+use digital_golem_engine::neural_weaver::{
+    FoundationalModel, MemoryMatrix, NeuralConfig, NeuralLattice,
+};
 use digital_golem_engine::MetaHuman;
 
 #[test]
