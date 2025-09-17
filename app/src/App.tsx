@@ -8,10 +8,15 @@ function App() {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
   const handleConnect = () => {
+    const payload = JSON.stringify({
+      selectedGenome: state.selectedGenome,
+      selectedNeural: state.selectedNeural,
+    });
+    
     if (window.api) {
-      window.api.send('connect-rust');
+      window.api.send('connect-rust', payload);
     } else {
-      window.electron?.ipcRenderer.send('connect-rust');
+      window.electron?.ipcRenderer.send('connect-rust', payload);
     }
   };
 

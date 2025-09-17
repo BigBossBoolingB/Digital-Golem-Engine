@@ -32,9 +32,9 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
-  ipcMain.on('connect-rust', () => {
-    console.log('IPC message [connect-rust] received. Executing Rust core...');
-    const command = 'cargo run --manifest-path ../core/Cargo.toml -- --handshake';
+  ipcMain.on('connect-rust', (event, payload) => {
+    console.log('IPC message [connect-rust] received. Executing Rust core with payload:', payload);
+    const command = `cargo run --manifest-path ../core/Cargo.toml -- --data '${payload}'`;
     exec(command, (error, stdout, stderr) => {
       if (error) {
         console.error(`Rust Execution Error: ${error.message}`);
