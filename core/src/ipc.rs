@@ -1,30 +1,26 @@
-use crate::{GeneBlock, NeuralConfig, MetaHuman};
-use serde_json;
+use crate::{
+    genome_sequencer::{DigitalGenome, GeneBlock},
+    neural_weaver::{NeuralLattice, NeuralConfig},
+    MetaHuman,
+};
+use serde::Deserialize;
 
-pub fn perform_handshake() {
-    println!("Rust Core Connected: Handshake successful.");
+#[derive(Deserialize)]
+struct IpcPayload {
+    genome: GeneBlock,
+    neural: NeuralConfig,
 }
 
-pub fn process_meta_human_data(json_data: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let data: serde_json::Value = serde_json::from_str(json_data)?;
-    
-    let selected_genome = data["selectedGenome"]
-        .as_str()
-        .ok_or("Missing selectedGenome")?;
-    let selected_neural = data["selectedNeural"]
-        .as_str()
-        .ok_or("Missing selectedNeural")?;
-    
-    let gene_block = GeneBlock {
-        name: selected_genome.to_string(),
-    };
-    
-    let neural_config = NeuralConfig {
-        name: selected_neural.to_string(),
-    };
-    
-    let meta_human = MetaHuman::new(gene_block, neural_config);
-    meta_human.print_summary();
-    
-    Ok(())
+pub fn process_ipc_payload(json_string: &str) {
+    match serde_json::from_str::<IpcPayload>(json_string) {
+        Ok(payload) => {
+            let genome = DigitalGenome::new("ipc-gen-001".to_string(), payload.genome);
+            let lattice = NeuralLattice::new(payload.neural);
+            let metahuman = MetaHuman::new("Subject-IPC".to_string(), genome, lattice);
+            metahuman.print_summary();
+        }
+        Err(e) => {
+            println!("Error deserializing payload: {}", e);
+        }
+    }
 }

@@ -1,35 +1,31 @@
 pub mod ipc;
+pub mod genome_sequencer;
+pub mod neural_weaver;
 
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct GeneBlock {
-    pub name: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct NeuralConfig {
-    pub name: String,
-}
+use genome_sequencer::DigitalGenome;
+use neural_weaver::NeuralLattice;
 
 #[derive(Debug)]
 pub struct MetaHuman {
-    pub gene_block: GeneBlock,
-    pub neural_config: NeuralConfig,
+    pub id: String,
+    pub genome: DigitalGenome,
+    pub neural_lattice: NeuralLattice,
 }
 
 impl MetaHuman {
-    pub fn new(gene_block: GeneBlock, neural_config: NeuralConfig) -> Self {
+    pub fn new(id: String, genome: DigitalGenome, neural_lattice: NeuralLattice) -> Self {
         Self {
-            gene_block,
-            neural_config,
+            id,
+            genome,
+            neural_lattice,
         }
     }
 
     pub fn print_summary(&self) {
         println!("=== MetaHuman Profile Summary ===");
-        println!("🧬 Genome Block: {}", self.gene_block.name);
-        println!("🧠 Neural Configuration: {}", self.neural_config.name);
+        println!("🤖 Subject ID: {}", self.id);
+        println!("🧬 Genome Block: {:?}", self.genome.core_block);
+        println!("🧠 Neural Configuration: {:?}", self.neural_lattice.config);
         println!("🤖 Status: Meta-Human successfully generated!");
         println!("================================");
     }

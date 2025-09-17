@@ -1,11 +1,14 @@
+interface GeneBlock { skeletal: string; musculature: string; dermal: string; }
+interface NeuralConfig { model: any; memory: string; has_ethical_manifold: boolean; }
+
 export interface AppState {
-  selectedGenome: string | null;
-  selectedNeural: string | null;
+  selectedGenome: GeneBlock | null;
+  selectedNeural: NeuralConfig | null;
 }
 
-export type Action =
-  | { type: 'SELECT_GENOME'; payload: string }
-  | { type: 'SELECT_NEURAL'; payload: string };
+export type Action = 
+  | { type: 'SELECT_GENOME'; payload: GeneBlock }
+  | { type: 'SELECT_NEURAL'; payload: NeuralConfig };
 
 export const initialState: AppState = {
   selectedGenome: null,
