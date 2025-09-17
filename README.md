@@ -19,3 +19,12 @@ Local checks:
 - cargo build
 - cargo test --all
 - cargo run
+
+Alternatively, use the Makefile helpers:
+- make fmt-check
+- make lint
+- make build
+- make test
+- make preflight
+
+See CONTRIBUTING.md for the full local pre-flight checklist and workflow.
