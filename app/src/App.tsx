@@ -1,4 +1,6 @@
 import { useReducer } from 'react'
+import { Canvas } from '@react-three/fiber'
+import { Color } from 'three'
 
 type SkeletalMaterial = 'GrapheneComposite' | 'CarbonSteelAlloy'
 type MusculatureType = 'CarbonFiberWeave' | 'ElectroactivePolymer'
@@ -162,12 +164,18 @@ export default function App() {
           </section>
         </div>
 
-        <section className="w-1/2 p-4 border-l border-slate-800 overflow-auto">
+        <section className="w-1/2 p-4 border-l border-slate-800">
           <h2 className="text-lg font-medium mb-3">Crucible Viewer</h2>
-          <div className="bg-slate-800 rounded p-4">
-            <pre className="text-xs">
-              {JSON.stringify(state, null, 2)}
-            </pre>
+          <div className="bg-slate-800 rounded h-[calc(100%-2rem-0.75rem)]">
+            <Canvas style={{ width: '100%', height: '100%' }}>
+              <ambientLight intensity={0.6} />
+              <directionalLight position={[3, 5, 2]} intensity={0.8} />
+              <mesh rotation={[0.4, 0.6, 0]}>
+                <boxGeometry args={[1.5, 1.5, 1.5]} />
+                <meshStandardMaterial color={new Color('#60a5fa')} />
+              </mesh>
+              <gridHelper args={[10, 10, '#334155', '#334155']} />
+            </Canvas>
           </div>
         </section>
       </main>
