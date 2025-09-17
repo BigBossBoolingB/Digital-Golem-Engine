@@ -1,6 +1,7 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import { exec } from 'node:child_process'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -64,3 +65,16 @@ app.on('activate', () => {
 })
 
 app.whenReady().then(createWindow)
+ipcMain.on('connect-rust', () => {
+  const corePath = path.join(__dirname, '..', 'core')
+  const cmd = `cargo run --manifest-path ${path.join(corePath, 'Cargo.toml')} -- --handshake`
+  console.log('IPC message received. Attempting to connect to Rust core...')
+  exec(cmd, { cwd: corePath }, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`exec error: ${error}`)
+      return
+    }
+    console.log(`Rust stdout: ${stdout}`)
+    if (stderr) console.error(`Rust stderr: ${stderr}`)
+  })
+})
