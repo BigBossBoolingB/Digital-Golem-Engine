@@ -1,5 +1,6 @@
 import { useReducer } from 'react';
 import { GenomeSequencer } from './components/GenomeSequencer';
+import { NeuralWeaver } from './components/NeuralWeaver';
 import { CrucibleViewer } from './components/CrucibleViewer';
 import { appReducer, initialState } from './state/appReducer';
 
@@ -14,6 +15,7 @@ function App() {
       <main className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-grow">
         <div className="md:col-span-1 flex flex-col gap-4">
           <GenomeSequencer dispatch={dispatch} />
+          <NeuralWeaver dispatch={dispatch} />
         </div>
         <div className="md:col-span-2">
           <CrucibleViewer appState={state} />
