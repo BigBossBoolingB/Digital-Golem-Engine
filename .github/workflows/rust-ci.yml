@@ -9,6 +9,10 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-test:
     name: Build & Test
@@ -23,6 +27,9 @@ jobs:
         with:
           components: clippy, rustfmt
 
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+
       - name: Check Formatting
         run: cargo fmt -- --check
 
@@ -31,6 +38,9 @@ jobs:
 
       - name: Build Project
         run: cargo build --verbose
+
+      - name: Run Tests
+        run: cargo test --all --verbose
 
       - name: Run Executable
         run: cargo run --verbose
