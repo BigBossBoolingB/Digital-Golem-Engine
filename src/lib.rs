@@ -25,6 +25,7 @@ impl MetaHuman {
         println!("Genome ID: {}", self.genome.id);
         println!("  - Skeletal: {:?}", self.genome.core_block.skeletal);
         println!("  - Musculature: {:?}", self.genome.core_block.musculature);
+        println!("  - Dermal: {:?}", self.genome.core_block.dermal);
         println!("Lattice Architecture: ");
         println!("  - Model: {:?}", self.lattice.config.model);
         println!("  - Memory: {:?}", self.lattice.config.memory);
