@@ -65,16 +65,19 @@ app.on('activate', () => {
 })
 
 app.whenReady().then(createWindow)
-ipcMain.on('connect-rust', () => {
+ipcMain.on('connect-rust', (_, payload) => {
   const corePath = path.join(__dirname, '..', 'core')
-  const cmd = `cargo run --manifest-path ${path.join(corePath, 'Cargo.toml')} -- --handshake`
-  console.log('IPC message received. Attempting to connect to Rust core...')
+  const cmd = `cargo run --manifest-path ${path.join(corePath, 'Cargo.toml')} -- '${payload}'`
+  console.log('IPC message received. Attempting to connect to Rust core with payload:', payload)
   exec(cmd, { cwd: corePath }, (error, stdout, stderr) => {
     if (error) {
       console.error(`exec error: ${error}`)
       return
     }
     console.log(`Rust stdout: ${stdout}`)
+    if (win) {
+      win.webContents.send('metahuman-generated', stdout.trim())
+    }
     if (stderr) console.error(`Rust stderr: ${stderr}`)
   })
 })

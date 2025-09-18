@@ -4,7 +4,24 @@ interface Props {
   dispatch: React.Dispatch<Action>;
 }
 
-const genomeOptions = ['GrapheneComposite', 'CarbonSteelAlloy'];
+const genomeOptions = [
+  {
+    name: 'GrapheneComposite',
+    data: {
+      skeletal: 'GrapheneComposite',
+      musculature: 'CarbonFiberWeave',
+      dermal: 'BioLuminescentSheath'
+    }
+  },
+  {
+    name: 'CarbonSteelAlloy',
+    data: {
+      skeletal: 'CarbonSteelAlloy',
+      musculature: 'ElectroactivePolymer',
+      dermal: 'ChameleonPlating'
+    }
+  }
+];
 
 export const GenomeSequencer = ({ dispatch }: Props) => {
   return (
@@ -13,11 +30,11 @@ export const GenomeSequencer = ({ dispatch }: Props) => {
       <div className="flex flex-wrap gap-2">
         {genomeOptions.map((opt) => (
           <button
-            key={opt}
-            onClick={() => dispatch({ type: 'SELECT_GENOME', payload: opt })}
+            key={opt.name}
+            onClick={() => dispatch({ type: 'SELECT_GENOME', payload: opt.data })}
             className="bg-gray-700 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full"
           >
-            {opt}
+            {opt.name}
           </button>
         ))}
       </div>
