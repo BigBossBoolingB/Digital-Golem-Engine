@@ -3,9 +3,10 @@ import { GenomeSequencer } from './components/GenomeSequencer';
 import { NeuralWeaver } from './components/NeuralWeaver';
 import { CrucibleViewer } from './components/CrucibleViewer';
 import { appReducer, initialState } from './state/appReducer';
+import jsonData from './data/G1_Rook_S1_Archie.json';
 
 function App() {
-  const [state, dispatch] = useReducer(appReducer, initialState);
+  const [, dispatch] = useReducer(appReducer, initialState);
 
   const handleConnect = () => {
     if (window.api) {
@@ -32,7 +33,7 @@ function App() {
           <NeuralWeaver dispatch={dispatch} />
         </div>
         <div className="md:col-span-2">
-          <CrucibleViewer appState={state} />
+          <CrucibleViewer jsonData={jsonData} />
         </div>
       </main>
     </div>
