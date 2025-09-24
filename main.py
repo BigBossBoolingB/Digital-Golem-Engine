@@ -94,10 +94,30 @@ API_KEY = os.getenv(config["runtime"]["api"]["auth"]["env_var"])
 if not API_KEY:
     sys.exit("No API key found in environment variable.")
 
+def moderate_content(text):
+    try:
+        response = requests.post(
+            "https://api.openai.com/v1/moderations",
+            headers={"Authorization": f"Bearer {API_KEY}"},
+            json={"input": text}
+        )
+        response.raise_for_status()  # Raise an exception for bad status codes
+        result = response.json()
+        return result["results"][0]["flagged"]
+    except requests.exceptions.RequestException as e:
+        print(f"\nError calling moderation endpoint: {e}")
+        return True  # Default to flagging content on error
+
 def call_ai(prompt):
+    system_prompt = """
+You are a helpful and harmless AI assistant. Your role is to provide safe and ethical responses, and to avoid generating content that is inappropriate, offensive, or dangerous. You must not express personal opinions or claim to be conscious.
+"""
     payload = {
         "model": config["runtime"]["api"]["model"],
-        "messages": [{"role": "user", "content": prompt}],
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": prompt}
+        ],
         "stream": config["runtime"]["stream"]
     }
     headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
@@ -133,7 +153,18 @@ while True:
         if user_in.lower() in config["interaction"]["exit_command"]:
             print(config["status_messages"]["closed"])
             break
-        call_ai(user_in)
+
+        # Moderate user input
+        if moderate_content(user_in):
+            print("\nYour input has been flagged as potentially harmful. Please rephrase your request.")
+            continue
+
+        # Call the AI and moderate the output
+        ai_output = call_ai(user_in)
+        if moderate_content(ai_output):
+            print("\nThe AI's response has been flagged as potentially harmful and will not be displayed.")
+            continue
+
     except KeyboardInterrupt:
         print(config["status_messages"]["forced_closed"])
         break
