@@ -1,18 +1,22 @@
-import { useReducer } from 'react';
-import { GenomeSequencer } from './components/GenomeSequencer';
-import { NeuralWeaver } from './components/NeuralWeaver';
-import { CrucibleViewer } from './components/CrucibleViewer';
-import { appReducer, initialState } from './state/appReducer';
+import { useState, useEffect } from 'react';
 
 function App() {
-  const [state, dispatch] = useReducer(appReducer, initialState);
+  const [output, setOutput] = useState('');
+  const [input, setInput] = useState('');
 
-  const handleConnect = () => {
-    if (window.api) {
-      window.api.send('connect-rust');
-    } else {
-      window.electron?.ipcRenderer.send('connect-rust');
-    }
+  useEffect(() => {
+    window.ipcRenderer?.on('python-stdout', (_event, data: string) => {
+      setOutput((prevOutput) => prevOutput + data);
+    });
+  }, []);
+
+  const handleStart = () => {
+    window.ipcRenderer?.send('run-python');
+  };
+
+  const handleSend = () => {
+    window.ipcRenderer?.send('python-stdin', input + '\n');
+    setInput('');
   };
 
   return (
@@ -20,19 +24,30 @@ function App() {
       <header className="text-center">
         <h1 className="text-3xl font-bold">Digital Golem Engine</h1>
         <button
-          onClick={handleConnect}
+          onClick={handleStart}
           className="mt-2 bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded"
         >
-          Connect to Rust Core
+          Start AI
         </button>
       </header>
-      <main className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-grow">
-        <div className="md:col-span-1 flex flex-col gap-4">
-          <GenomeSequencer dispatch={dispatch} />
-          <NeuralWeaver dispatch={dispatch} />
+      <main className="flex-grow flex flex-col gap-4">
+        <div className="flex-grow bg-black rounded-lg p-4 overflow-auto">
+          <pre>{output}</pre>
         </div>
-        <div className="md:col-span-2">
-          <CrucibleViewer appState={state} />
+        <div className="flex gap-4">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            className="flex-grow bg-gray-800 rounded-lg p-2"
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          />
+          <button
+            onClick={handleSend}
+            className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded"
+          >
+            Send
+          </button>
         </div>
       </main>
     </div>
