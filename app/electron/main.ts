@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { spawn } from 'node:child_process'
+import fs from 'fs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -66,8 +67,30 @@ app.on('activate', () => {
 
 app.whenReady().then(createWindow)
 
-ipcMain.on('run-python', () => {
-  const python = spawn('python3', [path.join(__dirname, '..', '..', 'main.py')]);
+ipcMain.on('get-config', (event) => {
+  const configPath = path.join(__dirname, '..', '..', 'config.json');
+  fs.readFile(configPath, 'utf-8', (err, data) => {
+    if (err) {
+      console.error('Failed to read config file:', err);
+      return;
+    }
+    event.sender.send('get-config-reply', JSON.parse(data));
+  });
+});
+
+ipcMain.on('write-temp-config', (event, data) => {
+  const tempConfigPath = path.join(app.getPath('temp'), 'temp_config.json');
+  fs.writeFile(tempConfigPath, JSON.stringify(data, null, 2), (err) => {
+    if (err) {
+      console.error('Failed to write temp config file:', err);
+      return;
+    }
+    event.sender.send('write-temp-config-reply', tempConfigPath);
+  });
+});
+
+ipcMain.on('run-python', (_event, tempConfigPath) => {
+  const python = spawn('python3', [path.join(__dirname, '..', '..', 'main.py'), tempConfigPath]);
 
   python.stdout.on('data', (data) => {
     win?.webContents.send('python-stdout', data.toString());
