@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, json, requests, sys
+import os, json, requests, sys, select
 
 # --- Load the JSON spec from a file ---
 if len(sys.argv) > 1:
@@ -11,7 +11,8 @@ with open(config_path, 'r') as f:
     config = json.load(f)
 
 # --- Boot sequence ---
-print(config["status_messages"]["active"])
+print(json.dumps({"status": "active", "config": config}))
+sys.stdout.flush()
 
 API_KEY = os.getenv(config["runtime"]["api"]["auth"]["env_var"])
 if not API_KEY:
@@ -35,36 +36,30 @@ You are a helpful and harmless AI assistant. Your role is to provide safe and et
     output = ""
     for line in resp.iter_lines():
         if line:
-            try:
-                # The response from the API is a JSON string, but it's prefixed with "data: "
-                # We need to remove that prefix before parsing.
-                decoded_line = line.decode("utf-8")
-                if decoded_line.startswith("data: "):
-                    json_str = decoded_line[len("data: "):]
-                    if json_str.strip() == "[DONE]":
-                        continue
+            decoded_line = line.decode("utf-8")
+            if decoded_line.startswith("data: "):
+                json_str = decoded_line[len("data: "):]
+                if json_str.strip() == "[DONE]":
+                    break
+                try:
                     data = json.loads(json_str)
                     if "choices" in data and len(data["choices"]) > 0:
                         delta = data["choices"][0]["delta"].get("content","")
                         if delta:
                             output += delta
-                            print(config["interaction"]["output_symbol"], delta, end="", flush=True)
-            except json.JSONDecodeError:
-                # Sometimes the stream sends empty lines or other non-JSON data, so we just ignore them.
-                continue
-    print()
+                            print(json.dumps({"type": "delta", "content": delta}))
+                            sys.stdout.flush()
+                except json.JSONDecodeError:
+                    continue
+    print(json.dumps({"type": "done", "content": output}))
+    sys.stdout.flush()
     return output
 
 # --- Interactive loop ---
-while True:
-    try:
-        user_in = input(config["interaction"]["input_symbol"])
-        if user_in.lower() in config["interaction"]["exit_command"]:
-            print(config["status_messages"]["closed"])
-            break
-        call_ai(user_in)
-    except KeyboardInterrupt:
-        print(config["status_messages"]["forced_closed"])
+for line in sys.stdin:
+    user_in = line.strip()
+    if user_in.lower() in config["interaction"]["exit_command"]:
+        print(json.dumps({"status": "closed"}))
+        sys.stdout.flush()
         break
-    except Exception as e:
-        print(config["status_messages"]["error"], str(e))
+    call_ai(user_in)

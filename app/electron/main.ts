@@ -68,7 +68,7 @@ app.on('activate', () => {
 app.whenReady().then(createWindow)
 
 ipcMain.on('get-config', (event) => {
-  const configPath = path.join(__dirname, '..', '..', 'config.json');
+  const configPath = path.join(app.getAppPath(), '..', 'config.json');
   fs.readFile(configPath, 'utf-8', (err, data) => {
     if (err) {
       console.error('Failed to read config file:', err);
@@ -78,29 +78,26 @@ ipcMain.on('get-config', (event) => {
   });
 });
 
-ipcMain.on('write-temp-config', (event, data) => {
+ipcMain.on('write-temp-config-and-run', (_event, data) => {
   const tempConfigPath = path.join(app.getPath('temp'), 'temp_config.json');
   fs.writeFile(tempConfigPath, JSON.stringify(data, null, 2), (err) => {
     if (err) {
       console.error('Failed to write temp config file:', err);
       return;
     }
-    event.sender.send('write-temp-config-reply', tempConfigPath);
-  });
-});
 
-ipcMain.on('run-python', (_event, tempConfigPath) => {
-  const python = spawn('python3', [path.join(__dirname, '..', '..', 'main.py'), tempConfigPath]);
+    const python = spawn('python3', [path.join(app.getAppPath(), '..', 'main.py'), tempConfigPath]);
 
-  python.stdout.on('data', (data) => {
-    win?.webContents.send('python-stdout', data.toString());
-  });
+    python.stdout.on('data', (data) => {
+      win?.webContents.send('python-stdout', data.toString());
+    });
 
-  python.stderr.on('data', (data) => {
-    console.error(`Python stderr: ${data}`);
-  });
+    python.stderr.on('data', (data) => {
+      console.error(`Python stderr: ${data}`);
+    });
 
-  ipcMain.on('python-stdin', (_event, data) => {
-    python.stdin.write(data);
+    ipcMain.on('python-stdin', (_event, data) => {
+      python.stdin.write(data);
+    });
   });
 });

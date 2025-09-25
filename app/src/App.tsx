@@ -1,8 +1,8 @@
 import { useState, useEffect, useReducer } from 'react';
 import { GenomeSequencer } from './components/GenomeSequencer';
 import { NeuralWeaver } from './components/NeuralWeaver';
-import { appReducer, initialState } from './state/appReducer';
 import { CrucibleViewer } from './components/CrucibleViewer';
+import { appReducer, initialState } from './state/appReducer';
 
 function App() {
   const [output, setOutput] = useState('');
@@ -12,7 +12,17 @@ function App() {
 
   useEffect(() => {
     window.ipcRenderer?.on('python-stdout', (_event, data: string) => {
-      setOutput((prevOutput) => prevOutput + data);
+      try {
+        const parsed = JSON.parse(data);
+        if (parsed.status === 'active') {
+          setConfig(parsed.config);
+        } else if (parsed.type === 'delta') {
+          setOutput((prevOutput) => prevOutput + parsed.content);
+        }
+      } catch (e) {
+        // Not a JSON object, just append the data to the output
+        setOutput((prevOutput) => prevOutput + data);
+      }
     });
 
     window.ipcRenderer?.on('get-config-reply', (_event, data) => {
@@ -25,28 +35,32 @@ function App() {
   useEffect(() => {
     if (config && state.selectedGenome) {
       const newConfig = JSON.parse(JSON.stringify(config));
-      newConfig.entity.operational_systems[0].purpose = state.selectedGenome;
-      setConfig(newConfig);
+      const aegisSystem = newConfig.entity.operational_systems.find(
+        (system: { name: string; }) => system.name === 'A.E.G.I.S._X._Protocol'
+      );
+      if (aegisSystem) {
+        aegisSystem.purpose = state.selectedGenome;
+        setConfig(newConfig);
+      }
     }
   }, [state.selectedGenome]);
 
   useEffect(() => {
     if (config && state.selectedNeural) {
       const newConfig = JSON.parse(JSON.stringify(config));
-      newConfig.entity.operational_systems[1].purpose = state.selectedNeural;
-      setConfig(newConfig);
+      const luxCoreSystem = newConfig.entity.operational_systems.find(
+        (system: { name: string; }) => system.name === 'Lux_Core'
+      );
+      if (luxCoreSystem) {
+        luxCoreSystem.purpose = state.selectedNeural;
+        setConfig(newConfig);
+      }
     }
   }, [state.selectedNeural]);
 
   const handleStart = () => {
-    window.ipcRenderer?.send('write-temp-config', config);
+    window.ipcRenderer?.send('write-temp-config-and-run', config);
   };
-
-  useEffect(() => {
-    window.ipcRenderer?.on('write-temp-config-reply', (_event, tempConfigPath) => {
-      window.ipcRenderer?.send('run-python', tempConfigPath);
-    });
-  }, []);
 
   const handleSend = () => {
     window.ipcRenderer?.send('python-stdin', input + '\n');
