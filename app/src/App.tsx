@@ -2,6 +2,7 @@ import { useState, useEffect, useReducer } from 'react';
 import { GenomeSequencer } from './components/GenomeSequencer';
 import { NeuralWeaver } from './components/NeuralWeaver';
 import { appReducer, initialState } from './state/appReducer';
+import { CrucibleViewer } from './components/CrucibleViewer';
 
 function App() {
   const [output, setOutput] = useState('');
@@ -67,6 +68,7 @@ function App() {
         <div className="md:col-span-1 flex flex-col gap-4">
           <GenomeSequencer dispatch={dispatch} />
           <NeuralWeaver dispatch={dispatch} />
+          <CrucibleViewer config={config} />
         </div>
         <div className="md:col-span-2 flex flex-col gap-4">
           <div className="flex-grow bg-black rounded-lg p-4 overflow-auto">
