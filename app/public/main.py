@@ -11,12 +11,13 @@ with open(config_path, 'r') as f:
     config = json.load(f)
 
 # --- Boot sequence ---
-print(json.dumps({"status": "active", "config": config}))
+print(json.dumps({"type": "status", "content": config["status_messages"]["active"]}))
 sys.stdout.flush()
 
 API_KEY = os.getenv(config["runtime"]["api"]["auth"]["env_var"])
 if not API_KEY:
-    sys.exit("No API key found in environment variable.")
+    print(json.dumps({"type": "error", "content": "No API key found in environment variable."}))
+    sys.exit(1)
 
 def call_ai(prompt):
     system_prompt = """
@@ -59,7 +60,7 @@ You are a helpful and harmless AI assistant. Your role is to provide safe and et
 for line in sys.stdin:
     user_in = line.strip()
     if user_in.lower() in config["interaction"]["exit_command"]:
-        print(json.dumps({"status": "closed"}))
+        print(json.dumps({"type": "status", "content": config["status_messages"]["closed"]}))
         sys.stdout.flush()
         break
     call_ai(user_in)

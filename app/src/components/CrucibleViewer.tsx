@@ -4,6 +4,7 @@ interface Props {
   config: {
     entity: {
       operational_systems: {
+        name: string;
         purpose: string;
       }[];
     };
@@ -44,8 +45,15 @@ export const CrucibleViewer = ({ config }: Props) => {
     );
   }
 
-  const genomePurpose = config.entity.operational_systems[0]?.purpose ?? null;
-  const neuralPurpose = config.entity.operational_systems[1]?.purpose ?? null;
+  const aegisSystem = config.entity.operational_systems.find(
+    (system) => system.name === 'A.E.G.I.S._X._Protocol'
+  );
+  const luxCoreSystem = config.entity.operational_systems.find(
+    (system) => system.name === 'Lux_Core'
+  );
+
+  const genomePurpose = aegisSystem?.purpose ?? null;
+  const neuralPurpose = luxCoreSystem?.purpose ?? null;
 
   const objectColor = colorForGenome(genomePurpose);
   const scale = scaleForNeural(neuralPurpose);

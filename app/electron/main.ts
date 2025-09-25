@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
-import { spawn } from 'node:child_process'
+import { spawn, ChildProcessWithoutNullStreams } from 'node:child_process'
 import fs from 'fs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -25,6 +25,7 @@ export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
 
 let win: BrowserWindow | null
+let pythonProcess: ChildProcessWithoutNullStreams | null = null
 
 function createWindow() {
   win = new BrowserWindow({
@@ -47,6 +48,13 @@ function createWindow() {
   }
 }
 
+app.on('before-quit', () => {
+  if (pythonProcess) {
+    pythonProcess.kill()
+    pythonProcess = null
+  }
+})
+
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
@@ -68,7 +76,7 @@ app.on('activate', () => {
 app.whenReady().then(createWindow)
 
 ipcMain.on('get-config', (event) => {
-  const configPath = path.join(app.getAppPath(), '..', 'config.json');
+  const configPath = path.join(process.env.VITE_PUBLIC, 'config.json');
   fs.readFile(configPath, 'utf-8', (err, data) => {
     if (err) {
       console.error('Failed to read config file:', err);
@@ -86,18 +94,24 @@ ipcMain.on('write-temp-config-and-run', (_event, data) => {
       return;
     }
 
-    const python = spawn('python3', [path.join(app.getAppPath(), '..', 'main.py'), tempConfigPath]);
+    if (pythonProcess) {
+      pythonProcess.kill()
+    }
 
-    python.stdout.on('data', (data) => {
+    pythonProcess = spawn('python3', [path.join(process.env.VITE_PUBLIC, 'main.py'), tempConfigPath]);
+
+    pythonProcess.stdout.on('data', (data) => {
       win?.webContents.send('python-stdout', data.toString());
     });
 
-    python.stderr.on('data', (data) => {
+    pythonProcess.stderr.on('data', (data) => {
       console.error(`Python stderr: ${data}`);
     });
-
-    ipcMain.on('python-stdin', (_event, data) => {
-      python.stdin.write(data);
-    });
   });
+});
+
+ipcMain.on('python-stdin', (_event, data) => {
+  if (pythonProcess) {
+    pythonProcess.stdin.write(data);
+  }
 });
