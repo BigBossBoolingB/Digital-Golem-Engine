@@ -14,8 +14,9 @@ function App() {
     window.ipcRenderer?.on('python-stdout', (_event, data: string) => {
       try {
         const parsed = JSON.parse(data);
-        if (parsed.status === 'active') {
-          setConfig(parsed.config);
+        if (parsed.type === 'status' && parsed.content.includes('Online')) {
+          // The python script is ready, we can now get the config
+          window.ipcRenderer?.send('get-config');
         } else if (parsed.type === 'delta') {
           setOutput((prevOutput) => prevOutput + parsed.content);
         }
@@ -28,8 +29,6 @@ function App() {
     window.ipcRenderer?.on('get-config-reply', (_event, data) => {
       setConfig(data);
     });
-
-    window.ipcRenderer?.send('get-config');
   }, []);
 
   useEffect(() => {
@@ -59,6 +58,7 @@ function App() {
   }, [state.selectedNeural]);
 
   const handleStart = () => {
+    setOutput('');
     window.ipcRenderer?.send('write-temp-config-and-run', config);
   };
 

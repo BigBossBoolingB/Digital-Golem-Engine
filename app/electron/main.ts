@@ -107,6 +107,13 @@ ipcMain.on('write-temp-config-and-run', (_event, data) => {
     pythonProcess.stderr.on('data', (data) => {
       console.error(`Python stderr: ${data}`);
     });
+
+    pythonProcess.on('close', (code) => {
+        if (code !== 0) {
+            console.error(`Python process exited with code ${code}`);
+        }
+        pythonProcess = null;
+    });
   });
 });
 
