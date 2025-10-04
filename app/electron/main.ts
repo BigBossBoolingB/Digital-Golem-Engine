@@ -80,32 +80,46 @@ ipcMain.on('get-config', (event) => {
   fs.readFile(configPath, 'utf-8', (err, data) => {
     if (err) {
       console.error('Failed to read config file:', err);
+      event.sender.send('get-config-reply', { error: err.message });
       return;
     }
     event.sender.send('get-config-reply', JSON.parse(data));
   });
 });
 
-ipcMain.on('write-temp-config-and-run', (_event, data) => {
-  const tempConfigPath = path.join(app.getPath('temp'), 'temp_config.json');
-  fs.writeFile(tempConfigPath, JSON.stringify(data, null, 2), (err) => {
-    if (err) {
-      console.error('Failed to write temp config file:', err);
-      return;
-    }
+ipcMain.on('save-config', (event, data) => {
+    const configPath = path.join(process.env.VITE_PUBLIC, 'config.json');
+    fs.writeFile(configPath, JSON.stringify(data, null, 2), (err) => {
+        if (err) {
+            console.error('Failed to write config file:', err);
+            event.sender.send('save-config-reply', { error: err.message });
+            return;
+        }
+        event.sender.send('save-config-reply', { success: true });
+    });
+});
 
+ipcMain.on('run-python', () => {
     if (pythonProcess) {
-      pythonProcess.kill()
+        pythonProcess.kill();
     }
 
-    pythonProcess = spawn('python3', [path.join(process.env.VITE_PUBLIC, 'main.py'), tempConfigPath]);
+    const mainPyPath = path.join(process.env.VITE_PUBLIC, 'main.py');
+    // The python script will default to config.json in the same directory.
+    pythonProcess = spawn('python3', [mainPyPath]);
 
     pythonProcess.stdout.on('data', (data) => {
-      win?.webContents.send('python-stdout', data.toString());
+        // The python script now sends self-contained JSON objects, separated by newlines.
+        const messages = data.toString().split('\n').filter(msg => msg.trim() !== '');
+        messages.forEach(msg => {
+            win?.webContents.send('python-stdout', msg);
+        });
     });
 
     pythonProcess.stderr.on('data', (data) => {
-      console.error(`Python stderr: ${data}`);
+        const errorMessage = data.toString();
+        console.error(`Python stderr: ${errorMessage}`);
+        win?.webContents.send('python-stderr', errorMessage);
     });
 
     pythonProcess.on('close', (code) => {
@@ -114,11 +128,11 @@ ipcMain.on('write-temp-config-and-run', (_event, data) => {
         }
         pythonProcess = null;
     });
-  });
 });
 
 ipcMain.on('python-stdin', (_event, data) => {
   if (pythonProcess) {
-    pythonProcess.stdin.write(data);
+    // The python script now expects a JSON string per line.
+    pythonProcess.stdin.write(JSON.stringify(data) + '\n');
   }
 });
